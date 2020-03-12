@@ -63,7 +63,7 @@ static esp_err_t wifi_event_handle(void *ctx, system_event_t *event)
 
     return ESP_OK;
 }
-
+//extern int awss_dev_ap_start(void);
 static void linkkit_event_monitor(int event)
 {
     switch (event) {
@@ -73,6 +73,7 @@ static void linkkit_event_monitor(int event)
             break;
 
         case IOTX_AWSS_ENABLE: // AWSS enable, AWSS doesn't parse awss packet until AWSS is enabled.
+        	//awss_dev_ap_start();
             ESP_LOGI(TAG, "IOTX_AWSS_ENABLE");
             // operate led to indicate user
             break;
@@ -188,13 +189,16 @@ static void start_conn_mgr()
 
     vTaskDelete(NULL);
 }
+extern void aht_init(void );
+
 
 void app_main()
 {
     factory_restore_init();
 
     lightbulb_init();
-
+	aht_init();
+	
     conn_mgr_init();
     conn_mgr_register_wifi_event(wifi_event_handle);
 

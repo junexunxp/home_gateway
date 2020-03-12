@@ -39,7 +39,10 @@
 static const char *TAG = "wrapper_product";
 
 static bool s_part_init_flag;
-
+static const char *productkey = "a1vZkRGlmbQ";
+static const char *devicename = "gateway";
+static const char *devicesecret = "hi3zf8503UJYmy8Zi1AR9Aa5mydcSiD0";
+static const char *productsecret = "tMXLMUePeCSTEppD";
 static esp_err_t HAL_ProductParam_init(void)
 {
     esp_err_t ret = ESP_OK;
@@ -109,7 +112,10 @@ static int HAL_GetProductParam(char *param_name, const char *param_name_str)
  */
 int HAL_GetDeviceName(char device_name[IOTX_DEVICE_NAME_LEN + 1])
 {
-    return HAL_GetProductParam(device_name, "DeviceName");
+	int len = strlen(devicename);
+	memcpy(device_name,devicename,len);
+	return len;
+   // return HAL_GetProductParam(device_name, "DeviceName");
 }
 
 /**
@@ -120,7 +126,11 @@ int HAL_GetDeviceName(char device_name[IOTX_DEVICE_NAME_LEN + 1])
  */
 int HAL_GetDeviceSecret(char device_secret[IOTX_DEVICE_SECRET_LEN + 1])
 {
-    return HAL_GetProductParam(device_secret, "DeviceSecret");
+	int len = strlen(devicesecret);
+	memcpy(device_secret,devicesecret,len);
+	return len;
+
+   // return HAL_GetProductParam(device_secret, "DeviceSecret");
 }
 
 /**
@@ -131,12 +141,20 @@ int HAL_GetDeviceSecret(char device_secret[IOTX_DEVICE_SECRET_LEN + 1])
  */
 int HAL_GetProductKey(char product_key[IOTX_PRODUCT_KEY_LEN + 1])
 {
-    return HAL_GetProductParam(product_key, "ProductKey");
+	int len = strlen(productkey);
+	memcpy(product_key,productkey,len);
+	return len;
+
+   // return HAL_GetProductParam(product_key, "ProductKey");
 }
 
 int HAL_GetProductSecret(char product_secret[IOTX_PRODUCT_SECRET_LEN + 1])
 {
-    return HAL_GetProductParam(product_secret, "ProductSecret");
+	int len = strlen(productsecret);
+	memcpy(product_secret,productsecret,len);
+	return len;
+
+    //return HAL_GetProductParam(product_secret, "ProductSecret");
 }
 
 /**

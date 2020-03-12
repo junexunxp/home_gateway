@@ -134,11 +134,12 @@ static int user_trigger_event_reply_event_handler(const int devid, const int msg
 
     return 0;
 }
+extern void read_temperature(void *pv_parameters);
 
 static int user_property_set_event_handler(const int devid, const char *request, const int request_len)
 {
     int res = 0;
-    cJSON *root = NULL, *LightSwitch = NULL, *LightColor = NULL;
+    cJSON *root = NULL, *LightSwitch = NULL, *LightColor = NULL, *humTempUpdate = NULL;
     ESP_LOGI(TAG,"Property Set Received, Devid: %d, Request: %s", devid, request);
     
     lightbulb_set_brightness(78);
@@ -154,6 +155,12 @@ static int user_property_set_event_handler(const int devid, const char *request,
         ESP_LOGI(TAG,"JSON Parse Error");
         return FAIL_RETURN;
     }
+	humTempUpdate = cJSON_GetObjectItem(root, "humTempStateUpdate");
+	if(humTempUpdate){
+		
+		read_temperature(NULL);
+
+	}
 
     /** Switch Lightbulb On/Off   */
     LightSwitch = cJSON_GetObjectItem(root, "LightSwitch");
@@ -326,7 +333,36 @@ static int user_mqtt_connect_succ_event_handler(void)
     
     return SUCCESS_RETURN;
 }
+void tem_sensor_property_post(float temp){
 
+    int res = 0;
+
+    char property_payload[32] = {0};
+    HAL_Snprintf(property_payload, sizeof(property_payload), "{\"CurrentTemperature\": %f},", temp);
+	//cnt += HAL_Snprintf(property_payload + cnt, sizeof(property_payload) - cnt, "{\"CurrentHumidity\": %f}", hum);
+
+    res = IOT_Linkkit_Report(EXAMPLE_MASTER_DEVID, ITM_MSG_POST_PROPERTY,
+                             (unsigned char *)property_payload, strlen(property_payload));
+
+    EXAMPLE_TRACE("Post Property Message ID: %d", res);
+
+}
+
+void hum_sensor_property_post(float hum){
+
+	
+	int res = 0;
+
+	char property_payload[32] = {0};
+	
+	HAL_Snprintf(property_payload, sizeof(property_payload), "{\"CurrentHumidity\": %f}", hum);
+
+	res = IOT_Linkkit_Report(EXAMPLE_MASTER_DEVID, ITM_MSG_POST_PROPERTY,
+	                         (unsigned char *)property_payload, strlen(property_payload));
+
+	EXAMPLE_TRACE("Post Property Message ID: %d", res);
+
+}
 static void user_post_property(void)
 {
     static int cnt = 0;
