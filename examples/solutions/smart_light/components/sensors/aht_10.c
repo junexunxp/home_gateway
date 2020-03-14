@@ -20,8 +20,8 @@ uint8_t eSensorMeasureCmd[3]   = {0xAC, 0x33, 0x00};
 uint8_t eSensorResetCmd        = 0xBA;
 
 
-#define I2C_MASTER_SCL_IO 18               /*!< gpio number for I2C master clock */
-#define I2C_MASTER_SDA_IO 19               /*!< gpio number for I2C master data  */
+#define I2C_MASTER_SCL_IO 23               /*!< gpio number for I2C master clock */
+#define I2C_MASTER_SDA_IO 22               /*!< gpio number for I2C master data  */
 #define I2C_MASTER_NUM 0 /*!< I2C port number for master dev */
 #define I2C_MASTER_FREQ_HZ 100000        /*!< I2C master clock frequency */
 #define I2C_MASTER_TX_BUF_DISABLE 0                           /*!< I2C master doesn't need buffer */
@@ -202,16 +202,15 @@ static int aht_setup(void)
 		return -1;
 	}
 }
-extern void tem_sensor_property_post(float temp);
-extern void hum_sensor_property_post(float hum);
+extern void tem_sensor_property_post(float temp, float hum);
 void read_temperature(void *pv_parameters)
 {
     float humidity = aht_get_humidity();
-	hum_sensor_property_post(humidity);
 	float temperature = aht_get_tem();
-	tem_sensor_property_post(temperature);
+	tem_sensor_property_post(temperature,humidity);
 	printf("temp %2fC, humdity %2f%%, dewpt %2f\r\n",temperature,humidity,aht_get_dew_point(temperature,humidity));
 }
+
 
 static TimerHandle_t s_tmr;
 

@@ -21,9 +21,15 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-#ifndef _LINKKIT_SOLO_H__
-#define _LINKKIT_SOLO_H__
+#ifndef _LINKKIT_GW_H__
+#define _LINKKIT_GW_H__
 
 void linkkit_main(void *paras);
+int gateway_delete_subdev(tsZbDeviceInfo *device);
+int gateway_sub_dev_add(tsZbDeviceInfo *devInfo, char *product_key, char *product_secret, char *device_name, char *device_secret);
+int gateway_delete_subdev_complete(tsZbDeviceInfo *device);
+
+void user_devcount_post_property(uint16_t value);
+int user_zb_device_property_post_event_handler(uint8_t index, tsZbDeviceAttribute *devattr);
 
 #endif
