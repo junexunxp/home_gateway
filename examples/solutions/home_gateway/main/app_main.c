@@ -21,11 +21,16 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sdkconfig.h>
+#include <stdbool.h>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-
+#include "freertos/timers.h"
+#include "gw_sys_config.h"
 #include "esp_err.h"
 #include "esp_event.h"
 #include "esp_log.h"
@@ -35,11 +40,7 @@
 #include "linkkit_gateway.h"
 #include "factory_restore.h"
 #include "lightbulb.h"
-
 #include "conn_mgr.h"
-#include "driver/gpio.h"
-#define GPIO_OUTPUT_IO_0    GPIO_NUM_18
-#define GPIO_OUTPUT_PIN_SEL  (1ULL<<GPIO_OUTPUT_IO_0)
 
 static const char *TAG = "app main";
 
@@ -193,6 +194,7 @@ static void start_conn_mgr()
     vTaskDelete(NULL);
 }
 extern void aht_init(void );
+#if ENABLE_FACTORY_RESET
 
 static void gpio_task_example(void* arg)
 {
@@ -202,7 +204,7 @@ static void gpio_task_example(void* arg)
 	uint8_t not_release = 0;
     for(;;) {
 
-        int level = gpio_get_level(GPIO_OUTPUT_IO_0);
+        int level = gpio_get_level(GPIO_OUTPUT_FACTORY_RESET);
 		if(!level && !not_release){
 			if(!first_time){
 				first_time = 1;
@@ -236,32 +238,49 @@ static void gpio_task_example(void* arg)
 }
 
 
-
+#endif
 void app_main()
 {
 
+
 	gpio_config_t io_conf;
+#if ENABLE_FACTORY_RESET
 	//interrupt rising edge
 	io_conf.intr_type = GPIO_INTR_DISABLE;
 	//set as output mode
 	io_conf.mode = GPIO_MODE_INPUT;
 	//bit mask of the pins that you want to set,e.g.GPIO18/19
-	io_conf.pin_bit_mask = GPIO_OUTPUT_PIN_SEL;
+	io_conf.pin_bit_mask = GPIO_OUTPUT_FR_PIN_SEL;
 	//disable pull-down mode
 	io_conf.pull_down_en = 0;
 	//disable pull-up mode
 	io_conf.pull_up_en = 1;
 	//configure GPIO with the given settings
 	gpio_config(&io_conf);
-
 	//start gpio task
 	xTaskCreate(gpio_task_example, "gpio_task_example", 1024, NULL, 0, NULL);
-
+#endif
+#if ENABLE_ZIGBEE_MODULE
+	//interrupt rising edge
+	io_conf.intr_type = GPIO_INTR_DISABLE;
+	//set as output mode
+	io_conf.mode = GPIO_MODE_OUTPUT;
+	//bit mask of the pins that you want to set,e.g.GPIO18/19
+	io_conf.pin_bit_mask = GPIO_OUTPUT_RESET_ZB_PIN_SEL;
+	//disable pull-down mode
+	io_conf.pull_down_en = 0;
+	//disable pull-up mode
+	io_conf.pull_up_en = 1;
+	//configure GPIO with the given settings
+	gpio_config(&io_conf);
+	ZB_MODULE_RESET();
+#endif
     factory_restore_init();
     lightbulb_init();
 	lightbulb_set_on(false);
+#if ENABLE_SENSOR_MODULE
 	aht_init();
-
+#endif
     conn_mgr_init();
     conn_mgr_register_wifi_event(wifi_event_handle);
 

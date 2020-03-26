@@ -1,17 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include <sdkconfig.h>
+#include <stdbool.h>
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/timers.h"
 
-#include "driver/i2c.h"
+#include "gw_sys_config.h"
 #include "esp_log.h"
 #include "linkkit_gateway.h"
 #include "aht_10.h"
 
+#if ENABLE_SENSOR_MODULE
 // Specify the constants for water vapor and barometric pressure.
 #define WATER_VAPOR 17.62f
 #define BAROMETRIC_PRESSURE 243.5f
@@ -21,20 +23,6 @@ uint8_t eSensorCalibrateCmd[3] = {0xE1, 0x08, 0x00};
 uint8_t eSensorNormalCmd[3]    = {0xA8, 0x00, 0x00};
 uint8_t eSensorMeasureCmd[3]   = {0xAC, 0x33, 0x00};
 uint8_t eSensorResetCmd        = 0xBA;
-
-
-#define I2C_MASTER_SCL_IO 23               /*!< gpio number for I2C master clock */
-#define I2C_MASTER_SDA_IO 22               /*!< gpio number for I2C master data  */
-#define I2C_MASTER_NUM 0 /*!< I2C port number for master dev */
-#define I2C_MASTER_FREQ_HZ 100000        /*!< I2C master clock frequency */
-#define I2C_MASTER_TX_BUF_DISABLE 0                           /*!< I2C master doesn't need buffer */
-#define I2C_MASTER_RX_BUF_DISABLE 0                           /*!< I2C master doesn't need buffer */
-#define WRITE_BIT I2C_MASTER_WRITE              /*!< I2C master write */
-#define READ_BIT I2C_MASTER_READ                /*!< I2C master read */
-#define ACK_CHECK_EN 0x1                        /*!< I2C master will check ack from slave*/
-#define ACK_CHECK_DIS 0x0                       /*!< I2C master will not check ack from slave */
-#define ACK_VAL 0x0                             /*!< I2C ack value */
-#define NACK_VAL 0x1                            /*!< I2C nack value */
 
 /**
  * @brief test code to read esp-i2c-slave
@@ -86,25 +74,6 @@ static esp_err_t i2c_master_write_slave(i2c_port_t i2c_num, uint8_t *data_wr, si
     return ret;
 }
 
-
-/**
- * @brief i2c master initialization
- */
-static esp_err_t i2c_master_init()
-{
-    int i2c_master_port = I2C_MASTER_NUM;
-    i2c_config_t conf;
-    conf.mode = I2C_MODE_MASTER;
-    conf.sda_io_num = I2C_MASTER_SDA_IO;
-    conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
-    conf.scl_io_num = I2C_MASTER_SCL_IO;
-    conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
-    conf.master.clk_speed = I2C_MASTER_FREQ_HZ;
-    i2c_param_config(i2c_master_port, &conf);
-    return i2c_driver_install(i2c_master_port, conf.mode,
-                              I2C_MASTER_RX_BUF_DISABLE,
-                              I2C_MASTER_TX_BUF_DISABLE, 0);
-}
 
 
 static int aht_read_value(bool get_temp);
@@ -195,6 +164,25 @@ static uint8_t aht_read_status(void)
     return read_data;
 }
 
+/**
+ * @brief i2c master initialization
+ */
+static esp_err_t i2c_master_init()
+{
+    int i2c_master_port = I2C_MASTER_NUM;
+    i2c_config_t conf;
+    conf.mode = I2C_MODE_MASTER;
+    conf.sda_io_num = I2C_MASTER_SDA_IO;
+    conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
+    conf.scl_io_num = I2C_MASTER_SCL_IO;
+    conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
+    conf.master.clk_speed = I2C_MASTER_FREQ_HZ;
+    i2c_param_config(i2c_master_port, &conf);
+    return i2c_driver_install(i2c_master_port, conf.mode,
+                              I2C_MASTER_RX_BUF_DISABLE,
+                              I2C_MASTER_TX_BUF_DISABLE, 0);
+}
+
 static int aht_setup(void)
 {
 	//hal_i2c_master_write(0, &pdata, 100,1);
@@ -238,30 +226,16 @@ void read_temperature(void *pv_parameters)
 
 
 static TimerHandle_t s_tmr;
-
+#endif
 void aht_init(void ){
+#if ENABLE_SENSOR_MODULE
 	i2c_master_init();
 	aht_setup();
 	int tmr_id = 0;
     s_tmr = xTimerCreate("connTmr", (10000 / portTICK_RATE_MS),
                        pdTRUE, (void *)tmr_id, read_temperature);
     xTimerStart(s_tmr, portMAX_DELAY);
-}
-
-
-#if 0
-void aht_demo_task(void ){
-	static uint32_t ticks = 0;
-	
-	if(os_cputime_get32() - ticks > 20000){
-		ticks = os_cputime_get32();
-		float humidity = aht_get_humidity();
-  		float temperature = aht_get_tem();
-		printf("temp %2fC, humdity %2f%%, dewpt %2f\r\n",temperature,humidity,aht_get_dew_point(temperature,humidity));
-	}
-
-
-
-}
-
 #endif
+}
+
+

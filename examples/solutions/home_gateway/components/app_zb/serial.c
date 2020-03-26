@@ -1,41 +1,24 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
-
+#include <string.h>
+#include <sdkconfig.h>
+#include <stdbool.h>
 
 #include "freertos/FreeRTOS.h"
-
 #include "freertos/task.h"
+#include "freertos/timers.h"
 
-#include "freertos/queue.h"
-#include "freertos/semphr.h"
-
-#include "driver/uart.h"
+#include "gw_sys_config.h"
 #include "gw_macro.h"
 #include "serial.h"
 #if ENABLE_ZB_MODULE
 #define ZBUART_RXBUFF               1024
 
-/*******************************************************************************
- * Prototypes
- ******************************************************************************/
 
-/*!
- * @brief eZb_Uart_Init function
- */
-
-#define UART_TAG         "Uart"
-#define UART_NUM1        (UART_NUM_1)
-#define BUF_SIZE         (100)
-#define UART1_RX_PIN     (18)
-#define UART1_TX_PIN     (19)
-#define UART_BAUD_11520  (11520)
-#define UART_BAUD_115200 (115200)
-#define TOLERANCE        (0.02)    //baud rate error tolerance 2%.
 
 void eSerial_Init(void)
 {
-
+#if ENABLE_ZIGBEE_MODULE
 	uart_config_t uart_config = {
         .baud_rate = UART_BAUD_115200,
         .data_bits = UART_DATA_8_BITS,
@@ -51,21 +34,26 @@ void eSerial_Init(void)
     // Install UART driver (we don't need an event queue here)
     uart_driver_install(UART_NUM1, BUF_SIZE * 2, 0, 0, NULL, 0);
     uart_set_mode(UART_NUM1, UART_MODE_UART);
+#endif
 }
 
 teSerial_Status eSerial_Read(uint8_t *data)
 {
+#if ENABLE_ZIGBEE_MODULE
 	int len = uart_read_bytes(UART_NUM1, data, 1,portMAX_DELAY);
 
     if (len ) {
         return E_SERIAL_OK;
     }
+#endif
     return E_SERIAL_NODATA;
 }
 
 void eSerial_WriteBuffer(uint8_t *data, uint8_t length)
 {
+#if ENABLE_ZIGBEE_MODULE
 	uart_write_bytes(UART_NUM1, (char*)data, length);
+#endif
 }
 
 #endif

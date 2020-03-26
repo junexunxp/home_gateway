@@ -1,17 +1,16 @@
 /* Copyright 2018 NXP */
 
-
-#include "freertos/FreeRTOS.h"
-
-#include "freertos/task.h"
-#include "freertos/queue.h"
-#include "freertos/timers.h"
-#include "freertos/semphr.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sdkconfig.h>
 #include <stdbool.h>
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/timers.h"
+
+#include "gw_sys_config.h"
 
 #include "zb_common.h"
 #include "serial_link.h"
@@ -79,8 +78,7 @@ extern bool bZD_ValidityCheckOfNodeId(uint16_t u16NodeId);
 void eZCB_Init(void) {
 
     /* Hold reset pin until all init process done */
-   // GPIO_PortClear(BOARD_JN5189_HW_RESET_PORT, 1 << BOARD_JN5189_HW_RESET_PIN);
-  
+  	ZB_MODULE_RESET();
     vZbDeviceTable_Init();
     if (E_SL_OK != eSL_Init())
     {
@@ -115,6 +113,7 @@ void eZCB_Init(void) {
 
     /* Release reset pin to start Zigbee */
   //  GPIO_PortSet(BOARD_JN5189_HW_RESET_PORT, 1 << BOARD_JN5189_HW_RESET_PIN);
+	ZB_MODULE_ON();
 
     /* only register Zigbee Cmd after */
    // ZigBeeCmdRegister();
