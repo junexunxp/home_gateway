@@ -25,6 +25,8 @@ extern "C" {
 
 #define ZB_ENDPOINT_SRC_DEFAULT          1
 #define ZB_ENDPOINT_DST_DEFAULT          1
+#define ZB_ENDPOINT_DST_ALIIOTSEC		 1
+
 #define ZB_MANU_CODE_DEFAULT             0x1037
 #define ZB_COORDINATOR_SHORT_ADDRESS     0x0000
 
