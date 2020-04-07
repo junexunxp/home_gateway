@@ -681,10 +681,11 @@ static void ZCB_HandleDeviceAnnounce(void *pvUser, uint16_t u16Length, void *pvM
 {
     HAL_Printf("ZCB_HandleDeviceAnnounce\r\n" );
 	uint8_t *ptr = pvMessage;
-   	uint16_t	u16ShortAddress = Utils_ExtractTwoByteValue(ptr);
+   	uint16_t	u16ShortAddress = Utils_BeExtractTwoByteValue(ptr);
 	ptr += 2;
 	//u16ShortAddress = ntohs(u16ShortAddress);
 	uint64_t	u64IEEEAddress;
+    Utils_RevertByteArray(ptr,8);
 	memcpy(&u64IEEEAddress,ptr,8);
 	//u64IEEEAddress = ntohd(u64IEEEAddress);
 	ptr += 8;
@@ -726,8 +727,8 @@ static void ZCB_HandleDeviceLeave(void *pvUser, uint16_t u16Length, void *pvMess
  
 	uint64_t    u64IeeeAddr;
 	uint8_t *ptr = pvMessage;
+    Utils_RevertByteArray(ptr,8);
 	memcpy(&u64IeeeAddr,ptr,8);
-	//u64IeeeAddr = ntohd(u64IeeeAddr);
 	ptr += 8;
 	
     uint8_t     u8RejoinStatus = *ptr;
@@ -996,8 +997,7 @@ static void ZCB_HandleActiveEndPointResp(void *pvUser, uint16_t u16Length, void 
     uint8_t *ptr = pvMessage;
    	uint8_t   u8SequenceNumber = *ptr++;
     uint8_t   u8Status = *ptr++;
-    uint16_t  u16ShortAddress = Utils_ExtractTwoByteValue(ptr);
-	u16ShortAddress = ntohs(u16ShortAddress);
+    uint16_t  u16ShortAddress = Utils_BeExtractTwoByteValue(ptr);
 	ptr += 2;
     uint8_t   u8EndPointCount = *ptr++;
     uint8_t   au8EndPointList[MAX_ZD_ENDPOINT_NUMBERS_PER_DEV];
@@ -1005,6 +1005,7 @@ static void ZCB_HandleActiveEndPointResp(void *pvUser, uint16_t u16Length, void 
 
     tsZbDeviceInfo* sDevice = tZDM_FindDeviceByNodeId(u16ShortAddress);
     if (sDevice == NULL) {
+        HAL_Printf("device table null, node id 0x%02x\n",u16ShortAddress);
         return; 
     }
     

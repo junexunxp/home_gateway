@@ -39,18 +39,24 @@ int eGetPermitJoining(void) {
 
 teZcbStatus eSetPermitJoining(uint8_t u8Interval) {
 
-    struct _PermitJoiningMessage {
-        uint16_t    u16TargetAddress;
-        uint8_t     u8Interval;
-        uint8_t     u8TCSignificance;
-    } PACKED sPermitJoiningMessage;
+    // struct _PermitJoiningMessage {
+    //     uint16_t    u16TargetAddress;
+    //     uint8_t     u8Interval;
+    //     uint8_t     u8TCSignificance;
+    // } PACKED sPermitJoiningMessage;
 
-    sPermitJoiningMessage.u16TargetAddress  = htons(E_ZB_BROADCAST_ADDRESS_ROUTERS);
-    sPermitJoiningMessage.u8Interval        = u8Interval;
-    sPermitJoiningMessage.u8TCSignificance  = 0;
+    // sPermitJoiningMessage.u16TargetAddress  = htons(E_ZB_BROADCAST_ADDRESS_ROUTERS);
+    // sPermitJoiningMessage.u8Interval        = u8Interval;
+    // sPermitJoiningMessage.u8TCSignificance  = 0;
+    uint8_t buffer[4];
+    uint8_t *ptr = buffer;
+    Utils_BePackTwoByteValue(E_ZB_BROADCAST_ADDRESS_ROUTERS,ptr);
+    ptr+=2;
+    *ptr++ = u8Interval;
+    *ptr++ = 0;
 
-    if (eSL_SendMessage(E_SL_MSG_PERMIT_JOINING_REQUEST, sizeof(struct _PermitJoiningMessage),
-           &sPermitJoiningMessage, NULL) != E_SL_OK) {
+    if (eSL_SendMessage(E_SL_MSG_PERMIT_JOINING_REQUEST, ptr - buffer,
+           buffer, NULL) != E_SL_OK) {
         return E_ZCB_COMMS_FAILED;
     }
     eGetPermitJoining();
@@ -60,14 +66,16 @@ teZcbStatus eSetPermitJoining(uint8_t u8Interval) {
 
 teZcbStatus eSetChannelMask(uint32_t u32ChannelMask) {
 
-    struct _SetChannelMaskMessage {
-        uint32_t    u32ChannelMask;
-    } PACKED sSetChannelMaskMessage;
-
-    sSetChannelMaskMessage.u32ChannelMask  = htonl(u32ChannelMask);
-
-    if (eSL_SendMessage(E_SL_MSG_SET_CHANNELMASK, sizeof(struct _SetChannelMaskMessage),
-            &sSetChannelMaskMessage, NULL) != E_SL_OK) {
+    // struct _SetChannelMaskMessage {
+    //     uint32_t    u32ChannelMask;
+    // } PACKED sSetChannelMaskMessage;
+    // sSetChannelMaskMessage.u32ChannelMask  = htonl(u32ChannelMask);
+    uint8_t buffer[4];
+    uint8_t *ptr = buffer;
+    Utils_BePackFourByteValue(u32ChannelMask,ptr);
+    ptr+=4;
+    if (eSL_SendMessage(E_SL_MSG_SET_CHANNELMASK, ptr - buffer,
+            buffer, NULL) != E_SL_OK) {
         return E_ZCB_COMMS_FAILED;
     }
     return E_ZCB_OK;
@@ -76,14 +84,17 @@ teZcbStatus eSetChannelMask(uint32_t u32ChannelMask) {
 
 teZcbStatus eSetDeviceType(teModuleMode eModuleMode) {
 
-    struct _SetDeviceTypeMessage {
-        uint8_t    u8ModuleMode;
-    } PACKED sSetDeviceTypeMessage;
+    // struct _SetDeviceTypeMessage {
+    //     uint8_t    u8ModuleMode;
+    // } PACKED sSetDeviceTypeMessage;
 
-    sSetDeviceTypeMessage.u8ModuleMode = eModuleMode;
+    // sSetDeviceTypeMessage.u8ModuleMode = eModuleMode;
+    uint8_t buffer[2];
+    uint8_t *ptr = buffer;
+    *ptr++ = eModuleMode;
 
-    if (eSL_SendMessage(E_SL_MSG_SET_DEVICETYPE, sizeof(struct _SetDeviceTypeMessage),
-            &sSetDeviceTypeMessage, NULL) != E_SL_OK) {
+    if (eSL_SendMessage(E_SL_MSG_SET_DEVICETYPE, ptr = buffer,
+            buffer, NULL) != E_SL_OK) {
         return E_ZCB_COMMS_FAILED;
     }
 
@@ -137,20 +148,31 @@ teZcbStatus eMgmtLeaveRequst(uint16_t u16ShortAddr,
                              uint8_t u8Rejoin, 
                              uint8_t u8RmChildren)
 {
-    struct _MgmtLeaveRequstMessage {
-        uint16_t    u16TargetAddress;
-        uint64_t    u64ExtendAddress;
-        uint8_t     uRejoinOrNot;     //0: Do Not Rejoin
-        uint8_t     uRmChildrenOrNot; //0: Leave and Remove the children
-    } PACKED sMgmtLeaveRequstMessage;
+    // struct _MgmtLeaveRequstMessage {
+    //     uint16_t    u16TargetAddress;
+    //     uint64_t    u64ExtendAddress;
+    //     uint8_t     uRejoinOrNot;     //0: Do Not Rejoin
+    //     uint8_t     uRmChildrenOrNot; //0: Leave and Remove the children
+    // } PACKED sMgmtLeaveRequstMessage;
 
-    sMgmtLeaveRequstMessage.u16TargetAddress = htons(u16ShortAddr);
-    sMgmtLeaveRequstMessage.u64ExtendAddress = htond(u64MacAddr);
-    sMgmtLeaveRequstMessage.uRejoinOrNot     = u8Rejoin;
-    sMgmtLeaveRequstMessage.uRmChildrenOrNot = u8RmChildren;
+    // sMgmtLeaveRequstMessage.u16TargetAddress = htons(u16ShortAddr);
+    // sMgmtLeaveRequstMessage.u64ExtendAddress = htond(u64MacAddr);
+    // sMgmtLeaveRequstMessage.uRejoinOrNot     = u8Rejoin;
+    // sMgmtLeaveRequstMessage.uRmChildrenOrNot = u8RmChildren;
+    uint8_t buffer[16];
+    uint8_t *ptr = buffer;
+    Utils_BePackTwoByteValue(u16ShortAddr,ptr);
+    ptr+=2;
+    memcpy(ptr,&u64MacAddr,8);
+    Utils_RevertByteArray(ptr,8);
+    ptr+=8;
+
+    *ptr++ = u8Rejoin;
+    *ptr++ = u8RmChildren;
     
-    if (eSL_SendMessage(E_SL_MSG_MANAGEMENT_LEAVE_REQUEST, sizeof(struct _MgmtLeaveRequstMessage),
-            &sMgmtLeaveRequstMessage, NULL) != E_SL_OK) {
+    
+    if (eSL_SendMessage(E_SL_MSG_MANAGEMENT_LEAVE_REQUEST, ptr - buffer,
+            buffer, NULL) != E_SL_OK) {
         return E_ZCB_COMMS_FAILED;
     }
 
@@ -161,14 +183,18 @@ teZcbStatus eMgmtLeaveRequst(uint16_t u16ShortAddr,
 
 teZcbStatus eSetExPANID(uint64_t u64Epid)
 {
-    struct _SetExPANIDMessage {
-        uint64_t    u64ExPANID;
-    } PACKED sSetExPANIDMessage;
+    // struct _SetExPANIDMessage {
+    //     uint64_t    u64ExPANID;
+    // } PACKED sSetExPANIDMessage;
+    uint8_t buffer[8];
+    uint8_t *ptr = buffer;
+    memcpy(ptr,&u64Epid,8);
+    Utils_RevertByteArray(ptr,8);
+    ptr+=8;
+    
 
-    sSetExPANIDMessage.u64ExPANID  = htond(u64Epid);
-
-    if (eSL_SendMessage(E_SL_MSG_SET_EXT_PANID, sizeof(struct _SetExPANIDMessage),
-            &sSetExPANIDMessage, NULL) != E_SL_OK) {
+    if (eSL_SendMessage(E_SL_MSG_SET_EXT_PANID, ptr - buffer,
+            buffer, NULL) != E_SL_OK) {
         return E_ZCB_COMMS_FAILED;
     }
     
@@ -179,17 +205,14 @@ teZcbStatus eSetExPANID(uint64_t u64Epid)
 
 teZcbStatus eActiveEndpointRequest(uint16_t u16ShortAddr)
 {
-    struct _ActiveEndpointRequestMessage {
-        uint16_t    u16ShortAddress;
-    } PACKED sActiveEndpointRequestMessage;
-
-    sActiveEndpointRequestMessage.u16ShortAddress  =u16ShortAddr; //htons(u16ShortAddr);
-
-    if (eSL_SendMessage(E_SL_MSG_ACTIVE_ENDPOINT_REQUEST, sizeof(struct _ActiveEndpointRequestMessage),
-            &sActiveEndpointRequestMessage, NULL) != E_SL_OK) {
+    uint8_t buffer[2];
+    uint8_t *ptr = buffer;
+    Utils_BePackTwoByteValue(u16ShortAddr,ptr);
+    ptr+=2;
+    if (eSL_SendMessage(E_SL_MSG_ACTIVE_ENDPOINT_REQUEST, ptr - buffer,
+            buffer, NULL) != E_SL_OK) {
         return E_ZCB_COMMS_FAILED;
     }
-
     return E_ZCB_OK;
 }
 
@@ -197,14 +220,13 @@ teZcbStatus eActiveEndpointRequest(uint16_t u16ShortAddr)
 
 teZcbStatus eNodeDescriptorRequest(uint16_t u16ShortAddr)    
 {
-    struct _NodeDescriptorRequestMessage {
-        uint16_t    u16ShortAddress;
-    } PACKED sNodeDescriptorRequestMessage;
 
-    sNodeDescriptorRequestMessage.u16ShortAddress  = htons(u16ShortAddr);
-
-    if (eSL_SendMessage(E_SL_MSG_NODE_DESCRIPTOR_REQUEST, sizeof(struct _NodeDescriptorRequestMessage),
-            &sNodeDescriptorRequestMessage, NULL) != E_SL_OK) {
+    uint8_t buffer[2];
+    uint8_t *ptr = buffer;
+    Utils_BePackTwoByteValue(u16ShortAddr,ptr);
+    ptr+=2;
+    if (eSL_SendMessage(E_SL_MSG_NODE_DESCRIPTOR_REQUEST, ptr - buffer,
+            buffer, NULL) != E_SL_OK) {
         return E_ZCB_COMMS_FAILED;
     }
 
@@ -216,16 +238,14 @@ teZcbStatus eNodeDescriptorRequest(uint16_t u16ShortAddr)
 
 teZcbStatus eSimpleDescriptorRequest(uint16_t u16ShortAddr, uint8_t u8DstEp)
 {
-    struct _SimpleDescriptorRequestMessage {
-        uint16_t    u16ShortAddress;
-        uint8_t     u8DestinationEndpoint;
-    } PACKED sSimpleDescriptorRequestMessage;
+    uint8_t buffer[3];
+    uint8_t *ptr = buffer;
+    Utils_BePackTwoByteValue(u16ShortAddr,ptr);
+    ptr+=2;
+    *ptr++ = u8DstEp;
 
-    sSimpleDescriptorRequestMessage.u16ShortAddress       = htons(u16ShortAddr);
-    sSimpleDescriptorRequestMessage.u8DestinationEndpoint = u8DstEp;
-
-    if (eSL_SendMessage(E_SL_MSG_SIMPLE_DESCRIPTOR_REQUEST, sizeof(struct _SimpleDescriptorRequestMessage),
-            &sSimpleDescriptorRequestMessage, NULL) != E_SL_OK) {
+    if (eSL_SendMessage(E_SL_MSG_SIMPLE_DESCRIPTOR_REQUEST, ptr-buffer,
+            buffer, NULL) != E_SL_OK) {
         return E_ZCB_COMMS_FAILED;
     }
     
@@ -241,24 +261,39 @@ teZcbStatus eMatchDescriptorRequest(uint16_t u16ShortAddr,
                                     uint8_t u8NoOutputCluster,
                                     uint16_t u16OutClusterId)
 {
-    struct _MatchDescriptorRequestMessage {
-        uint16_t    u16ShortAddress;
-        uint16_t    u16ProfileIdentification;
-        uint8_t     u8NumberInputCluster;
-        uint16_t    u16InputClusterId;
-        uint8_t     u8NumberOutputCluster;
-        uint16_t    u16OutputClusterId;
-    } PACKED sMatchDescriptorRequestMessage;
+    // struct _MatchDescriptorRequestMessage {
+    //     uint16_t    u16ShortAddress;
+    //     uint16_t    u16ProfileIdentification;
+    //     uint8_t     u8NumberInputCluster;
+    //     uint16_t    u16InputClusterId;
+    //     uint8_t     u8NumberOutputCluster;
+    //     uint16_t    u16OutputClusterId;
+    // } PACKED sMatchDescriptorRequestMessage;
 
-    sMatchDescriptorRequestMessage.u16ShortAddress          = htons(u16ShortAddr);
-    sMatchDescriptorRequestMessage.u16ProfileIdentification = htons(u16ProfileId);
-    sMatchDescriptorRequestMessage.u8NumberInputCluster     = u8NoInputCluster;
-    sMatchDescriptorRequestMessage.u16InputClusterId        = htons(u16InClusterId);
-    sMatchDescriptorRequestMessage.u8NumberOutputCluster    = u8NoOutputCluster;
-    sMatchDescriptorRequestMessage.u16OutputClusterId       = htons(u16OutClusterId);
+    // sMatchDescriptorRequestMessage.u16ShortAddress          = htons(u16ShortAddr);
+    // sMatchDescriptorRequestMessage.u16ProfileIdentification = htons(u16ProfileId);
+    // sMatchDescriptorRequestMessage.u8NumberInputCluster     = u8NoInputCluster;
+    // sMatchDescriptorRequestMessage.u16InputClusterId        = htons(u16InClusterId);
+    // sMatchDescriptorRequestMessage.u8NumberOutputCluster    = u8NoOutputCluster;
+    // sMatchDescriptorRequestMessage.u16OutputClusterId       = htons(u16OutClusterId);
 
-    if (eSL_SendMessage(E_SL_MSG_MATCH_DESCRIPTOR_REQUEST, sizeof(struct _MatchDescriptorRequestMessage),
-            &sMatchDescriptorRequestMessage, NULL) != E_SL_OK) {
+    uint8_t buffer[16];
+    uint8_t *ptr = buffer;
+    Utils_BePackTwoByteValue(u16ShortAddr,ptr);
+    ptr+=2;
+    Utils_BePackTwoByteValue(u16ProfileId,ptr);
+    ptr+=2;
+    *ptr++ = u8NoInputCluster;
+    Utils_BePackTwoByteValue(u16InClusterId,ptr);
+    ptr+=2;
+    *ptr++ = u8NoOutputCluster;
+    Utils_BePackTwoByteValue(u16InClusterId,ptr);
+    ptr+=2;
+
+
+
+    if (eSL_SendMessage(E_SL_MSG_MATCH_DESCRIPTOR_REQUEST, ptr - buffer,
+            buffer, NULL) != E_SL_OK) {
         return E_ZCB_COMMS_FAILED;
     }
     
@@ -272,20 +307,31 @@ teZcbStatus eNwkAddressRequest(uint16_t u16DstShortAddr,
                                uint8_t u8RstType,
                                uint8_t u8Index)
 {
-    struct _NetworkAddressRequestMessage {
-        uint16_t    u16TargetShortAddress;
-        uint64_t    u64InterestMacAddress;
-        uint8_t     u8RequestType;
-        uint8_t     u8StartIndex;
-    } PACKED sNetworkAddressRequestMessage;
+    // struct _NetworkAddressRequestMessage {
+    //     uint16_t    u16TargetShortAddress;
+    //     uint64_t    u64InterestMacAddress;
+    //     uint8_t     u8RequestType;
+    //     uint8_t     u8StartIndex;
+    // } PACKED sNetworkAddressRequestMessage;
 
-    sNetworkAddressRequestMessage.u16TargetShortAddress = htons(u16DstShortAddr);
-    sNetworkAddressRequestMessage.u64InterestMacAddress = htond(u64InterestMacAddr);
-    sNetworkAddressRequestMessage.u8RequestType         = u8RstType;
-    sNetworkAddressRequestMessage.u8StartIndex          = u8Index;
+    // sNetworkAddressRequestMessage.u16TargetShortAddress = htons(u16DstShortAddr);
+    // sNetworkAddressRequestMessage.u64InterestMacAddress = htond(u64InterestMacAddr);
+    // sNetworkAddressRequestMessage.u8RequestType         = u8RstType;
+    // sNetworkAddressRequestMessage.u8StartIndex          = u8Index;
+    uint8_t buffer[16];
+    uint8_t *ptr = buffer;
+    Utils_BePackTwoByteValue(u16DstShortAddr,ptr);
+    ptr+=2;
+    memcpy(ptr,&u64InterestMacAddr,8);
+    Utils_RevertByteArray(ptr,8);
+    ptr+=8;
 
-    if (eSL_SendMessage(E_SL_MSG_NETWORK_ADDRESS_REQUEST, sizeof(struct _NetworkAddressRequestMessage),
-            &sNetworkAddressRequestMessage, NULL) != E_SL_OK) {
+    *ptr++ = u8RstType;
+ 
+    *ptr++ = u8Index;
+
+    if (eSL_SendMessage(E_SL_MSG_NETWORK_ADDRESS_REQUEST, ptr - buffer,
+            buffer, NULL) != E_SL_OK) {
         return E_ZCB_COMMS_FAILED;
     }
     
@@ -299,20 +345,30 @@ teZcbStatus eIeeeAddressRequest(uint16_t u16DstShortAddr,
                                 uint8_t u8RstType,
                                 uint8_t u8Index)
 {
-    struct _IeeeAddressRequestMessage {
-        uint16_t    u16TargetShortAddress;
-        uint16_t    u16InterestShortAddress;
-        uint8_t     u8RequestType;
-        uint8_t     u8StartIndex;
-    } PACKED sIeeeAddressRequestMessage;
+    // struct _IeeeAddressRequestMessage {
+    //     uint16_t    u16TargetShortAddress;
+    //     uint16_t    u16InterestShortAddress;
+    //     uint8_t     u8RequestType;
+    //     uint8_t     u8StartIndex;
+    // } PACKED sIeeeAddressRequestMessage;
 
-    sIeeeAddressRequestMessage.u16TargetShortAddress   = htons(u16DstShortAddr);
-    sIeeeAddressRequestMessage.u16InterestShortAddress = htons(u16InterestShortAddr);
-    sIeeeAddressRequestMessage.u8RequestType           = u8RstType;
-    sIeeeAddressRequestMessage.u8StartIndex            = u8Index;
+    // sIeeeAddressRequestMessage.u16TargetShortAddress   = htons(u16DstShortAddr);
+    // sIeeeAddressRequestMessage.u16InterestShortAddress = htons(u16InterestShortAddr);
+    // sIeeeAddressRequestMessage.u8RequestType           = u8RstType;
+    // sIeeeAddressRequestMessage.u8StartIndex            = u8Index;
+    uint8_t buffer[8];
+    uint8_t *ptr = buffer;
+    Utils_BePackTwoByteValue(u16DstShortAddr,ptr);
+    ptr+=2;
+    Utils_BePackTwoByteValue(u16InterestShortAddr,ptr);
+    ptr+=2;
 
-    if (eSL_SendMessage(E_SL_MSG_IEEE_ADDRESS_REQUEST, sizeof(struct _IeeeAddressRequestMessage),
-            &sIeeeAddressRequestMessage, NULL) != E_SL_OK) {
+    *ptr++ = u8RstType;
+ 
+    *ptr++ = u8Index;
+
+    if (eSL_SendMessage(E_SL_MSG_IEEE_ADDRESS_REQUEST, ptr - buffer,
+            buffer, NULL) != E_SL_OK) {
         return E_ZCB_COMMS_FAILED;
     }
     
@@ -338,28 +394,61 @@ teZcbStatus eReadAttributeRequest(uint8_t u8AddrMode,
         u8NumOfAttr = MAX_NB_READ_ATTRIBUTES;
     }
 
-    tsZDReadAttrReq sReadAttrReq;
-    sReadAttrReq.u8AddressMode              = u8AddrMode;
-    sReadAttrReq.u16ShortAddress            = htons(u16Addr);
-    sReadAttrReq.u8SourceEndPointId         = u8SrcEp;
-    sReadAttrReq.u8DestinationEndPointId    = u8DstEp;
-    sReadAttrReq.u16ClusterId               = htons(u16ClusterId);
-    sReadAttrReq.bDirectionIsServerToClient = SEND_DIR_FROM_CLIENT_TO_SERVER;
-    sReadAttrReq.bIsManufacturerSpecific    = bIsManuSpecific;
-    sReadAttrReq.u16ManufacturerCode        = htons(u16ManuCode);
-    sReadAttrReq.u8NumberOfAttributes       = u8NumOfAttr;
 
+// typedef struct
+// {
+//     uint8_t         u8AddressMode;
+//     uint16_t        u16ShortAddress;
+//     uint8_t         u8SourceEndPointId;
+//     uint8_t         u8DestinationEndPointId;
+//     uint16_t        u16ClusterId;
+//     uint8_t         bDirectionIsServerToClient;
+//     uint8_t         bIsManufacturerSpecific;
+//     uint16_t        u16ManufacturerCode;
+//     uint8_t         u8NumberOfAttributes;
+//     uint16_t        au16AttributeList[MAX_NB_READ_ATTRIBUTES]; /* 10 is max number hard-coded in ZCB */
+// }  tsZDReadAttrReq;
 
+//     tsZDReadAttrReq sReadAttrReq;
+//     sReadAttrReq.u8AddressMode              = u8AddrMode;
+//     sReadAttrReq.u16ShortAddress            = htons(u16Addr);
+//     sReadAttrReq.u8SourceEndPointId         = u8SrcEp;
+//     sReadAttrReq.u8DestinationEndPointId    = u8DstEp;
+//     sReadAttrReq.u16ClusterId               = htons(u16ClusterId);
+//     sReadAttrReq.bDirectionIsServerToClient = SEND_DIR_FROM_CLIENT_TO_SERVER;
+//     sReadAttrReq.bIsManufacturerSpecific    = bIsManuSpecific;
+//     sReadAttrReq.u16ManufacturerCode        = htons(u16ManuCode);
+//     sReadAttrReq.u8NumberOfAttributes       = u8NumOfAttr;
+
+   
+    // for (uint8_t i = 0; i < u8NumOfAttr; i++)
+    // {
+    //     sReadAttrReq.au16AttributeList[i] = htons(au16AttrList[i]);
+    // }
+
+    uint8_t buffer[16 + MAX_NB_READ_ATTRIBUTES*2];
+    uint8_t *ptr = buffer;
+    *ptr++ = u8AddrMode;
+    Utils_BePackTwoByteValue(u16Addr,ptr);
+    ptr+=2;
+    *ptr++ = u8SrcEp;
+    *ptr++ = u8DstEp;
+    Utils_BePackTwoByteValue(u16ClusterId,ptr);
+    ptr+=2;
+    *ptr++ = SEND_DIR_FROM_CLIENT_TO_SERVER;
+    *ptr++ = bIsManuSpecific;
+    Utils_BePackTwoByteValue(u16ManuCode,ptr);
+    ptr+=2;
+    *ptr++ = u8NumOfAttr;
     for (uint8_t i = 0; i < u8NumOfAttr; i++)
     {
-        sReadAttrReq.au16AttributeList[i] = htons(au16AttrList[i]);
+        Utils_BePackTwoByteValue(au16AttrList[i],ptr);
+        ptr+=2;
     }
-
     HAL_Printf("Send Read Attribute Request to 0x%04x, endpoints: 0x%02x -> 0x%02x\r\n",
         u16Addr, u8SrcEp, u8DstEp);
 
-    eStatus = eSL_SendMessage(E_SL_MSG_READ_ATTRIBUTE_REQUEST,
-        sizeof(tsZDReadAttrReq) + sizeof(uint16_t)*(u8NumOfAttr - MAX_NB_READ_ATTRIBUTES), &sReadAttrReq, &u8SequenceNo);
+    eStatus = eSL_SendMessage(E_SL_MSG_READ_ATTRIBUTE_REQUEST, ptr - buffer, buffer, &u8SequenceNo);
     if (eStatus != E_SL_OK)
     {
         HAL_Printf("Send Read Attribute Request to 0x%04x : Fail (0x%x)\r\n",
@@ -377,48 +466,62 @@ teZcbStatus eSendBindUnbindCommand(uint64_t u64TargetIeeeAddr,
                                    uint16_t u16ClusterId,
                                    bool bBind)
 {                            
-    struct _BindUnbindReq {
-        uint64_t u64SrcAddress;
-        uint8_t u8SrcEndpoint;
-        uint16_t u16ClusterId;
-        uint8_t u8DstAddrMode;
-        union {
-            struct {
-                uint16_t u16DstAddress;
-            } PACKED sShort;
-            struct {
-                uint64_t u64DstAddress;
-                uint8_t u8DstEndPoint;
-            } PACKED sExtended;
-        } PACKED uAddressField;
-    } PACKED sBindUnbindReq;
+//     struct _BindUnbindReq {
+//         uint64_t u64SrcAddress;
+//         uint8_t u8SrcEndpoint;
+//         uint16_t u16ClusterId;
+//         uint8_t u8DstAddrMode;
+//         union {
+//             struct {
+//                 uint16_t u16DstAddress;
+//             } PACKED sShort;
+//             struct {
+//                 uint64_t u64DstAddress;
+//                 uint8_t u8DstEndPoint;
+//             } PACKED sExtended;
+//         } PACKED uAddressField;
+//     } PACKED sBindUnbindReq;
 
-#if 0
-    struct _BindUnbindResp {
-        uint8_t     u8SequenceNo;
-        uint8_t     u8Status;
-    } PACKED *psBindUnbindResp = NULL;
-#endif
+// #if 0
+//     struct _BindUnbindResp {
+//         uint8_t     u8SequenceNo;
+//         uint8_t     u8Status;
+//     } PACKED *psBindUnbindResp = NULL;
+// #endif
     
-    uint16_t u16Length = sizeof(struct _BindUnbindReq);
+//     uint16_t u16Length = sizeof(struct _BindUnbindReq);
+//     uint8_t u8SequenceNo;
+    
+//     memset( (char *)&sBindUnbindReq, 0, u16Length );
+
+//     sBindUnbindReq.u64SrcAddress = (u64TargetIeeeAddr); //htond
+//     sBindUnbindReq.u8SrcEndpoint = u8TargetEp;
+//     sBindUnbindReq.u16ClusterId  = htons(u16ClusterId);
+//     sBindUnbindReq.u8DstAddrMode = E_ZD_ADDRESS_MODE_IEEE;
+//     sBindUnbindReq.uAddressField.sExtended.u64DstAddress = (zbNetworkInfo.u64IeeeAddress);//htond
+//     sBindUnbindReq.uAddressField.sExtended.u8DstEndPoint = ZB_ENDPOINT_ATTR;
     uint8_t u8SequenceNo;
+    uint8_t buffer[32];
+    uint8_t *ptr = buffer;
+    memcpy(ptr,&u64TargetIeeeAddr,8);
+    Utils_RevertByteArray(ptr,8);
+    ptr+=8;
+    *ptr++ = u8TargetEp;
+    Utils_BePackTwoByteValue(u16ClusterId,ptr);
+    ptr+=2;
+    *ptr++ = E_ZD_ADDRESS_MODE_IEEE;
+    memcpy(ptr,&zbNetworkInfo.u64IeeeAddress,8);
+    Utils_RevertByteArray(ptr,8);
+    ptr+=8;
+    *ptr++ = ZB_ENDPOINT_ATTR;
     
-    memset( (char *)&sBindUnbindReq, 0, u16Length );
-
-    sBindUnbindReq.u64SrcAddress = (u64TargetIeeeAddr); //htond
-    sBindUnbindReq.u8SrcEndpoint = u8TargetEp;
-    sBindUnbindReq.u16ClusterId  = htons(u16ClusterId);
-    sBindUnbindReq.u8DstAddrMode = E_ZD_ADDRESS_MODE_IEEE;
-    sBindUnbindReq.uAddressField.sExtended.u64DstAddress = (zbNetworkInfo.u64IeeeAddress);//htond
-    sBindUnbindReq.uAddressField.sExtended.u8DstEndPoint = ZB_ENDPOINT_ATTR;
-    
-    HAL_Printf("Send (Un-)Binding request to 0x%016llX (%d)\r\n", u64TargetIeeeAddr, u16Length);
+    HAL_Printf("Send (Un-)Binding request to 0x%016llX (%d), cluster id 0x%x\r\n", u64TargetIeeeAddr, ptr - buffer,u16ClusterId);
 
     if (bBind) 
     {    
         if (eSL_SendMessage( E_SL_MSG_BIND,
-                             u16Length, 
-                             &sBindUnbindReq, 
+                             ptr - buffer, 
+                             buffer, 
                              &u8SequenceNo) != E_SL_OK) 
         {
             HAL_Printf("Sending bind command fail\r\n");
@@ -427,7 +530,7 @@ teZcbStatus eSendBindUnbindCommand(uint64_t u64TargetIeeeAddr,
         else
         {
             //wait 1s for the bind response
-            if (eSL_MessageWait(E_SL_MSG_BIND_RESPONSE, 1000, NULL, NULL) != E_SL_OK)
+            if (eSL_MessageWait(E_SL_MSG_BIND_RESPONSE, 5000, NULL, NULL) != E_SL_OK)
             {
                 HAL_Printf( "No bind response is received\r\n");
                 return E_ZCB_COMMS_FAILED;
@@ -437,8 +540,8 @@ teZcbStatus eSendBindUnbindCommand(uint64_t u64TargetIeeeAddr,
     else 
     {
         if (eSL_SendMessage( E_SL_MSG_UNBIND,
-                             u16Length, 
-                             &sBindUnbindReq, 
+                             ptr- buffer, 
+                             buffer, 
                              &u8SequenceNo) != E_SL_OK) 
         {
             HAL_Printf("Sending unbind command fail\n");
@@ -447,7 +550,7 @@ teZcbStatus eSendBindUnbindCommand(uint64_t u64TargetIeeeAddr,
         else
         {
             //wait 1s for the unbind response
-            if (eSL_MessageWait(E_SL_MSG_UNBIND_RESPONSE, 1000, NULL, NULL) != E_SL_OK)
+            if (eSL_MessageWait(E_SL_MSG_UNBIND_RESPONSE, 5000, NULL, NULL) != E_SL_OK)
             {
                 HAL_Printf("No unbind response is received\r\n");
                 return E_ZCB_COMMS_FAILED;
@@ -472,60 +575,88 @@ teZcbStatus eConfigureReportingCommand(uint8_t u8AddrMode,
                                        uint16_t u16Max,
                                        uint8_t u8Change)
 {                        
-    struct _AttributeReportingConfigurationRequest
-    {
-        uint8_t     u8TargetAddrMode;
-        uint16_t    u16TargetAddress;
-        uint8_t     u8SrcEndpoint;
-        uint8_t     u8DstEndpoint;
-        uint16_t    u16ClusterID;       
-        uint8_t     bDirection;
-        uint8_t     bManuSpecific; 
-        uint16_t    u16ManuCode;
-        uint8_t     u8AttrCount;
-        uint8_t     u8AttrDir;
-        uint8_t     u8DataType;
-        uint16_t    u16AttributeId;     
-        uint16_t    u16MinInterval;
-        uint16_t    u16MaxInterval;
-        uint16_t    u16Timeout;
-        uint8_t     u8AttrChange;
-    } PACKED sAttributeReportingConfigurationRequest;
+//     struct _AttributeReportingConfigurationRequest
+//     {
+//         uint8_t     u8TargetAddrMode;
+//         uint16_t    u16TargetAddress;
+//         uint8_t     u8SrcEndpoint;
+//         uint8_t     u8DstEndpoint;
+//         uint16_t    u16ClusterID;       
+//         uint8_t     bDirection;
+//         uint8_t     bManuSpecific; 
+//         uint16_t    u16ManuCode;
+//         uint8_t     u8AttrCount;
+//         uint8_t     u8AttrDir;
+//         uint8_t     u8DataType;
+//         uint16_t    u16AttributeId;     
+//         uint16_t    u16MinInterval;
+//         uint16_t    u16MaxInterval;
+//         uint16_t    u16Timeout;
+//         uint8_t     u8AttrChange;
+//     } PACKED sAttributeReportingConfigurationRequest;
 
-#if 0
-    struct _AttributeReportingConfigurationResponse
-    {        
-        uint8_t     u8SequenceNo;
-        uint8_t     u8Status;
-    } PACKED *psAttributeReportingConfigurationResponse = NULL;
-#endif
+// #if 0
+//     struct _AttributeReportingConfigurationResponse
+//     {        
+//         uint8_t     u8SequenceNo;
+//         uint8_t     u8Status;
+//     } PACKED *psAttributeReportingConfigurationResponse = NULL;
+// #endif
     
-    uint16_t u16Length = sizeof(struct _AttributeReportingConfigurationRequest);
+//     uint16_t u16Length = sizeof(struct _AttributeReportingConfigurationRequest);
+//     uint8_t u8SequenceNo;
+    
+//     HAL_Printf("Send Reporting Configuration request to 0x%04X\r\n", u16Addr);
+    
+//     sAttributeReportingConfigurationRequest.u8TargetAddrMode = E_ZB_ADDRESS_MODE_SHORT;
+//     sAttributeReportingConfigurationRequest.u16TargetAddress = htons(u16Addr);
+//     sAttributeReportingConfigurationRequest.u8SrcEndpoint    = u8SrcEp;
+//     sAttributeReportingConfigurationRequest.u8DstEndpoint    = u8DstEp;    
+//     sAttributeReportingConfigurationRequest.u16ClusterID     = htons(u16ClusterId);    
+//     sAttributeReportingConfigurationRequest.bDirection       = SEND_DIR_FROM_CLIENT_TO_SERVER;
+//     sAttributeReportingConfigurationRequest.bManuSpecific    = MANUFACTURER_SPECIFIC_FALSE;
+//     sAttributeReportingConfigurationRequest.u16ManuCode      = htons(u16ManuCode);
+//     sAttributeReportingConfigurationRequest.u8AttrCount      = 1;
+//     sAttributeReportingConfigurationRequest.u8AttrDir        = ATTRIBUTE_DIR_TX_SERVER;
+    
+//     sAttributeReportingConfigurationRequest.u8DataType       = u8AttributeType;
+//     sAttributeReportingConfigurationRequest.u16AttributeId   = htons(u16AttributeID);
+//     sAttributeReportingConfigurationRequest.u16MinInterval   = htons(u16Min);
+//     sAttributeReportingConfigurationRequest.u16MaxInterval   = htons(u16Max);
+//     sAttributeReportingConfigurationRequest.u16Timeout       = 0;
+//     sAttributeReportingConfigurationRequest.u8AttrChange     = u8Change;
     uint8_t u8SequenceNo;
-    
-    HAL_Printf("Send Reporting Configuration request to 0x%04X\r\n", u16Addr);
-    
-    sAttributeReportingConfigurationRequest.u8TargetAddrMode = E_ZB_ADDRESS_MODE_SHORT;
-    sAttributeReportingConfigurationRequest.u16TargetAddress = htons(u16Addr);
-    sAttributeReportingConfigurationRequest.u8SrcEndpoint    = u8SrcEp;
-    sAttributeReportingConfigurationRequest.u8DstEndpoint    = u8DstEp;    
-    sAttributeReportingConfigurationRequest.u16ClusterID     = htons(u16ClusterId);    
-    sAttributeReportingConfigurationRequest.bDirection       = SEND_DIR_FROM_CLIENT_TO_SERVER;
-    sAttributeReportingConfigurationRequest.bManuSpecific    = MANUFACTURER_SPECIFIC_FALSE;
-    sAttributeReportingConfigurationRequest.u16ManuCode      = htons(u16ManuCode);
-    sAttributeReportingConfigurationRequest.u8AttrCount      = 1;
-    sAttributeReportingConfigurationRequest.u8AttrDir        = ATTRIBUTE_DIR_TX_SERVER;
-    
-    sAttributeReportingConfigurationRequest.u8DataType       = u8AttributeType;
-    sAttributeReportingConfigurationRequest.u16AttributeId   = htons(u16AttributeID);
-    sAttributeReportingConfigurationRequest.u16MinInterval   = htons(u16Min);
-    sAttributeReportingConfigurationRequest.u16MaxInterval   = htons(u16Max);
-    sAttributeReportingConfigurationRequest.u16Timeout       = 0;
-    sAttributeReportingConfigurationRequest.u8AttrChange     = u8Change;
+    uint8_t buffer[32];
+    uint8_t *ptr = buffer;
+    *ptr++ = E_ZB_ADDRESS_MODE_SHORT;
+    Utils_BePackTwoByteValue(u16Addr,ptr);
+    ptr+=2;
 
+    *ptr++ = u8SrcEp;
+    *ptr++ = u8DstEp;
+    Utils_BePackTwoByteValue(u16ClusterId,ptr);
+    ptr+=2;
+    *ptr++ = SEND_DIR_FROM_CLIENT_TO_SERVER;
+
+    *ptr++ = MANUFACTURER_SPECIFIC_FALSE;
+    Utils_BePackTwoByteValue(u16ManuCode,ptr);
+    ptr+=2;
+    *ptr++ = 1;
+    *ptr++ = ATTRIBUTE_DIR_TX_SERVER;
+
+    *ptr++ = u8AttributeType;
+    Utils_BePackTwoByteValue(u16AttributeID,ptr);
+    ptr+=2;
+    Utils_BePackTwoByteValue(u16Min,ptr);
+    ptr+=2;
+    Utils_BePackTwoByteValue(u16Max,ptr);
+    ptr+=2;
+    Utils_BePackTwoByteValue(0,ptr);
+    ptr+=2;
+    *ptr++ = u8Change;
     if (eSL_SendMessage( E_SL_MSG_CONFIG_REPORTING_REQUEST,
-                         u16Length, 
-                         &sAttributeReportingConfigurationRequest, 
+                         ptr - buffer, 
+                         buffer, 
                          &u8SequenceNo) != E_SL_OK)
     {
         HAL_Printf("Sending configure report command fail\r\n");

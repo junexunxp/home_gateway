@@ -8,7 +8,7 @@
 #include "cmd.h"
 #include "sys_mgmt.h"
 
-
+#define     ZB_SHORT_ID_LEN_BYTES           (2)
 int HAL_Kv_Set(const char *key, const void *val, int len, int sync);
 int HAL_Kv_Get(const char *key, void *val, int *buffer_len);
 int HAL_Kv_Del(const char *key);

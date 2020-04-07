@@ -655,6 +655,7 @@ CALIBRATION_ERROR=0xc2,
     | ( (*(buf)) << 24) \
 )
 
+
 /*! Writes a uint16_t into a buffer, little-endian */
 #define Utils_PackTwoByteValue(value, buf) \
 { \

@@ -243,7 +243,7 @@ uint8_t uZDM_FindDevTableIndexByNodeId(uint16_t u16NodeId)
 		}
 	}
     
-	HAL_Printf("No this device exits in current device table!\r\n");
+	HAL_Printf("%s: no device table entry index found\r\n",__func__);
 	return 0xFF;
 }
 
@@ -270,7 +270,7 @@ tsZbDeviceInfo* tZDM_FindDeviceByNodeId(uint16_t u16NodeId)
 			return &(deviceTable[i]);
 		}
 	}
-	HAL_Printf("No this device exits in current device table!\r\n");
+	HAL_Printf("%s: no device table entry found\r\n",__func__);
 	return NULL;
 }
 
@@ -294,7 +294,7 @@ tsZbDeviceInfo* tZDM_FindDeviceByIeeeAddress(uint64_t u64IeeeAddr, uint16_t shor
 			return &(deviceTable[i]);
 		}
 	}
-	HAL_Printf("No this device exits in current device table!\r\n");
+	HAL_Printf("%s: no device table entry found\r\n",__func__);
 	return NULL;	
 }
 
@@ -404,6 +404,9 @@ tsZbDeviceAttribute* tZDM_AddNewAttributeToAttributeTable(uint16_t u16NodeId,
             attributeTable[i].u16AttributeId = u16AttributeId;
             attributeTable[i].u8DataType     = u8DataType;
             tsZbDeviceCluster* devCluster = tZDM_FindClusterEntryInDeviceTable(u16NodeId, u8Endpoint, u16ClusterId);
+			if(!devCluster){
+				return NULL;
+			}
             devCluster->u8AttributeCount ++;
 		
             status = HAL_Kv_Set(DBM_ZD_ATTRIBUTE_TABLE_KEY,attributeTable,sizeof(tsZbDeviceAttribute)*MAX_ZD_ATTRIBUTE_NUMBERS_TOTAL,0);
@@ -442,6 +445,9 @@ tsZbDeviceCluster* tZDM_FindClusterEntryInDeviceTable(uint16_t u16NodeId,
                                                       uint16_t u16ClusterId)
 {
     tsZbDeviceEndPoint *sEndpoint = tZDM_FindEndpointEntryInDeviceTable(u16NodeId, u8Endpoint);
+	if(!sEndpoint){
+		return NULL;
+	}
     for (uint8_t i = 0; i < MAX_ZD_CLUSTER_NUMBERS_PER_EP; i++) {
         if (sEndpoint->sZDCluster[i].u16ClusterId == u16ClusterId)
             return &(sEndpoint->sZDCluster[i]);
@@ -1619,16 +1625,24 @@ static int zb_device_iot_se_req_timeoutcb(void *args){
 		case ZB_DEVICE_MANAGE_CLUSTER_BIND:{
 			teZcbStatus st = zb_device_manage_cluster_bind(zbdi->devinfo);
 			HAL_Printf("Cluster bind result 0x%x\r\n",st);
+			if(st == E_ZCB_OK){
+				zbdi->items_get = ZB_DEVICE_MANAGE_PKEY_REQ;
+			}
 		}
 		break;
 
 		case ZB_DEVICE_MANAGE_PKEY_REQ:{
 			uint16_t au16AttrList = E_ZB_ATTRIBUTEID_ALIIOTSECURITY_PRODUCTKEY;
-            tZDM_AddNewAttributeToAttributeTable(zbdi->devinfo->u16NodeId,
-                                                    ZB_ENDPOINT_SRC_DEFAULT,
-                                                    E_ZB_CLUSTERID_ALIIOTSECURITY,
-                                                    E_ZB_ATTRIBUTEID_ALIIOTSECURITY_PRODUCTKEY,
-                                                    E_ZB_ATTRIBUTE_STRING_TYPE);
+            tsZbDeviceAttribute *da = tZDM_AddNewAttributeToAttributeTable(zbdi->devinfo->u16NodeId,
+																			ZB_ENDPOINT_SRC_DEFAULT,
+																			E_ZB_CLUSTERID_ALIIOTSECURITY,
+																			E_ZB_ATTRIBUTEID_ALIIOTSECURITY_PRODUCTKEY,
+																			E_ZB_ATTRIBUTE_STRING_TYPE);
+			if(!da){
+				HAL_Printf("Invalid device attribute, restart the flow from ZB_DEVICE_MANAGE_ACTIVE_EP_REQ\n");
+				zbdi->items_get = ZB_DEVICE_MANAGE_ACTIVE_EP_REQ;
+				return 2;
+			}
 			eReadAttributeRequest(E_ZD_ADDRESS_MODE_SHORT, 
                                   zbdi->devinfo->u16NodeId, 
                                   ZB_ENDPOINT_SRC_DEFAULT, 
