@@ -50,21 +50,13 @@ extern "C" {
 #define SIMPLE_DESCR_WINDOW_SENSOR     0x0014   // CES - window sensor
 #define SIMPLE_DESCR_OCCUPANCY_SENSOR  0x0107   // ZH/ZLO - Occupancy Sensor
 
-#define LOGGING_TASK_PRIORITY                   (tskIDLE_PRIORITY + 1)
-#define LOGGING_TASK_STACK_SIZE                 512//200
 
 #define GATEWAY_TASK_PRIORITY                   (tskIDLE_PRIORITY + 6)
-#define GATEWAY_TASK_STACK_SIZE                 1024
+#define GATEWAY_TASK_STACK_SIZE                 4096
 #define SERIAL_CALLBACK_TASK_PRIORITY           (tskIDLE_PRIORITY + 8)
-#define SERIAL_CALLBACK_TASK_STACK_SIZE         2048 //1024
+#define SERIAL_CALLBACK_TASK_STACK_SIZE         4096 //1024
 #define SERIAL_READ_TASK_PRIORITY               (tskIDLE_PRIORITY + 14)
-#define SERIAL_READ_TASK_STACK_SIZE             2048 //1024//512
-  
-#define USB_HOST_TASK_PRIORITY                  (tskIDLE_PRIORITY + 18)
-#define USB_HOST_TASK_STACK_SIZE                1024//512
-  
-#define SHELL_TASK_PRIORITY                     (tskIDLE_PRIORITY + 2)
-#define SHELL_TASK_STACK_SIZE                   1024
+#define SERIAL_READ_TASK_STACK_SIZE             4096 //1024//512
 
 
 

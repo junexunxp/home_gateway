@@ -320,7 +320,7 @@ tsZbDeviceInfo* tZDM_AddNewDeviceToDeviceTable(uint16_t u16NodeId, uint64_t u64I
 			deviceTable[i].eDeviceState = E_ZB_DEVICE_STATE_NEW_JOINED;
 			deviceTable[i].eZrZedType = eZrZedType;
             zbNetworkInfo.u16DeviceCount ++;
-			user_devcount_post_property(zbNetworkInfo.u16DeviceCount);
+		//	user_devcount_post_property(zbNetworkInfo.u16DeviceCount);
             status = HAL_Kv_Set(DBM_ZD_DEVICE_TABLE_KEY,deviceTable,sizeof(tsZbDeviceInfo)*MAX_ZD_DEVICE_NUMBERS,0);
 			if(status != 0){
 				HAL_Printf("Save device table failed! status:%d\r\n",status);
@@ -704,7 +704,7 @@ void vZDM_ClearAllDeviceTables()
 void vZbDeviceTable_Init()
 {
     if(zbd_second_timer == NULL){
-            zbd_second_timer = xTimerCreate("wm_second_timer", 1000, pdTRUE, NULL, (TimerCallbackFunction_t)zbd_s_timer_cb);
+            zbd_second_timer = xTimerCreate("wm_second_timer", pdMS_TO_TICKS(1000), pdTRUE, NULL, (TimerCallbackFunction_t)zbd_s_timer_cb);
             if(zbd_timer_event_mutex == NULL){
                     zbd_timer_event_mutex = (QueueHandle_t )xSemaphoreCreateMutex();
                     if(zbd_timer_event_mutex == NULL){
@@ -1588,12 +1588,12 @@ static int zb_device_iot_se_req_timeoutcb(void *args){
 		goto zbd_done;
 	}
 	zbdi->timeout--;
-	
+	HAL_Printf("items get seq:%d\n",zbdi->items_get);
 	switch(zbdi->items_get){
 		
 		case ZB_DEVICE_MANAGE_ACTIVE_EP_REQ:{
 			teZcbStatus st = eActiveEndpointRequest(zbdi->devinfo->u16NodeId);		
-			HAL_Printf("Active endpoint request status 0x%x\r\n",st);
+			HAL_Printf("Active endpoint request , dev 0x%x status 0x%x\r\n",zbdi->devinfo->u16NodeId,st);
 		}
 		break;
 		

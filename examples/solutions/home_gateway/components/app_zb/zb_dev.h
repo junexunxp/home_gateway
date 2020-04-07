@@ -29,10 +29,10 @@ extern "C" {
 #define ZB_DEVICE_TABLE_NULL_NODE_ID            0
 
 /***Zigbee data base manager****/  
-#define  DBM_ZD_NETWORK_INFO_KEY     "zigbeeNetworkInfo"
-#define  DBM_ZD_DEVICE_TABLE_KEY     "zigbeeDeviceTable"
-#define  DBM_ZD_ATTRIBUTE_TABLE_KEY  "zigbeeAttributeTable"
-#define  DBM_ZD_HEARTBEAT_TABLE_KEY  "zigbeeHeartBeatTable"
+#define  DBM_ZD_NETWORK_INFO_KEY     "zni"
+#define  DBM_ZD_DEVICE_TABLE_KEY     "zdt"
+#define  DBM_ZD_ATTRIBUTE_TABLE_KEY  "zat"
+#define  DBM_ZD_HEARTBEAT_TABLE_KEY  "zhbt"
 //#define  DBM_ZD_SUB_DEVICE_AM_TABLE_KEY  "zigbeeSubDeviceAMTable"
 
 /****************************************************************************/
@@ -249,7 +249,7 @@ typedef struct
     uint8_t u8DataType;
     teZbDeviceType eDeviceType;
     tuZbDeviceAttributeData uData;
-} PACKED tsZbDeviceAttribute;
+} tsZbDeviceAttribute;
 
 
 
@@ -284,7 +284,7 @@ typedef struct
 {
 	uint16_t u16ClusterId;
 	uint8_t u8AttributeCount;
-} PACKED tsZbDeviceCluster;
+} tsZbDeviceCluster;
 
 
 

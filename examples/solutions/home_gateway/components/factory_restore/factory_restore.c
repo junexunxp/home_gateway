@@ -87,6 +87,8 @@ static void factory_restore_timer_handler(void *timer)
 
 esp_err_t factory_restore_init(void)
 {
+    extern void HAL_Kv_Init(void );
+    HAL_Kv_Init();
 #ifdef CONFIG_IDF_TARGET_ESP32
     if (esp_sleep_get_wakeup_cause() != ESP_SLEEP_WAKEUP_UNDEFINED) {
         HAL_Kv_Del(FACTORY_QUICK_REBOOT_TIMES);

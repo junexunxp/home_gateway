@@ -183,7 +183,7 @@ teZcbStatus eActiveEndpointRequest(uint16_t u16ShortAddr)
         uint16_t    u16ShortAddress;
     } PACKED sActiveEndpointRequestMessage;
 
-    sActiveEndpointRequestMessage.u16ShortAddress  = htons(u16ShortAddr);
+    sActiveEndpointRequestMessage.u16ShortAddress  =u16ShortAddr; //htons(u16ShortAddr);
 
     if (eSL_SendMessage(E_SL_MSG_ACTIVE_ENDPOINT_REQUEST, sizeof(struct _ActiveEndpointRequestMessage),
             &sActiveEndpointRequestMessage, NULL) != E_SL_OK) {

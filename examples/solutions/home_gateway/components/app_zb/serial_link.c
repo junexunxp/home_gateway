@@ -609,7 +609,7 @@ static void serialReadTask(void * pvParameters)
         
        	if (eSL_ReadMessage(&sMessage.u16Type, &sMessage.u16Length, SL_MAX_MESSAGE_LENGTH, sMessage.au8Message) == E_SL_OK)
     	{	
-#if 0
+#if 1
             HAL_Printf("Receive Msg = 0x%x, Len = %d\r\n", sMessage.u16Type, sMessage.u16Length);
 #endif
     		if (sMessage.u16Type == E_SL_MSG_LOG)
@@ -625,7 +625,7 @@ static void serialReadTask(void * pvParameters)
                 }
                 else if (eStatus == E_SL_NOMESSAGE)
                 {
-#if 0
+#if 1
                     HAL_Printf("No listener waiting for message type 0x%04X\r\n", sMessage.u16Type);
 #endif
                 }
