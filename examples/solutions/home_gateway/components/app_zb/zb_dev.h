@@ -85,7 +85,7 @@ typedef struct
       uint64_t u64IEEEAddress;
       teZDBroadcastMode eBroadcastMode;
     } uAddress;
-}PACKED tsZDAddress;
+} tsZDAddress;
 
 
 
@@ -102,10 +102,10 @@ typedef struct
     {
         uint8_t u8DeviceVersion :4;
         uint8_t u8Reserved :4;
-    } PACKED sBitField;
+    }  sBitField;
     uint8_t    u8ClusterCount;
     uint16_t   au16Clusters[MAX_ZD_CLUSTER_NUMBERS_PER_EP];
-} PACKED tsZDSimpleDescRsp;
+}  tsZDSimpleDescRsp;
 
 
 
@@ -121,7 +121,7 @@ typedef struct
     uint8_t         bIsManufacturerSpecific;
     uint16_t        u16ManufacturerCode;
     uint8_t         u8MaximumNumberOfIdentifiers;
-} PACKED tsZDAttrDiscReq;
+}  tsZDAttrDiscReq;
 
 
 
@@ -137,7 +137,7 @@ typedef struct
     uint16_t        u16ManufacturerCode;
     uint8_t         u8NumberOfAttributes;
     uint16_t        au16AttributeList[MAX_NB_READ_ATTRIBUTES]; /* 10 is max number hard-coded in ZCB */
-} PACKED tsZDReadAttrReq;
+}  tsZDReadAttrReq;
 
 
 
@@ -152,14 +152,14 @@ typedef struct
     uint8_t   u8AttributeDataType;
     uint16_t  u16SizeOfAttributesInBytes;
     uint8_t   au8AttributeValue[];
-} PACKED tsZDReadAttrResp;
+}  tsZDReadAttrResp;
 
 
 
 typedef struct
 {
     uint16_t        u16ShortAddress;
-}PACKED tsZDActiveEndPointReq;
+} tsZDActiveEndPointReq;
 
 
 
@@ -170,7 +170,7 @@ typedef struct
     uint16_t  u16ShortAddress;
     uint8_t   u8EndPointCount;
     uint8_t   au8EndPointList[MAX_ZD_ENDPOINT_NUMBERS_PER_DEV];
-} PACKED tsZDActiveEndPointResp;
+} tsZDActiveEndPointResp;
 
 
 
@@ -229,7 +229,7 @@ typedef union
 		uint8_t u8Length;
 		uint8_t *pData;
 	} sData;	
-} PACKED tuZbDeviceAttributeData;
+} tuZbDeviceAttributeData;
 
 typedef enum
 {
@@ -266,7 +266,7 @@ typedef struct
     uint16_t u16MaxIntv;
     uint16_t u16TimeOut;
     uint64_t u64Change;
-} PACKED tsZbDeviceConfigReport;
+}  tsZbDeviceConfigReport;
 
 
 typedef struct 
@@ -276,7 +276,7 @@ typedef struct
 	uint8_t u8SrcEndpoint;
     uint16_t u16ClusterId;
 	uint16_t u16AttributeId;
-} PACKED tsZbDeviceReadReportConfig;
+} tsZbDeviceReadReportConfig;
 
 
 
@@ -294,7 +294,7 @@ typedef struct
     uint16_t u16DeviceType;
 	uint8_t u8ClusterCount;
 	tsZbDeviceCluster sZDCluster[MAX_ZD_CLUSTER_NUMBERS_PER_EP];
-} PACKED tsZbDeviceEndPoint;
+} tsZbDeviceEndPoint;
 
 
 
@@ -307,7 +307,7 @@ typedef struct
 	uint8_t u8EndpointCount;
 	teZbDeviceType eZrZedType;
 	tsZbDeviceEndPoint sZDEndpoint[MAX_ZD_ENDPOINT_NUMBERS_PER_DEV];
-} PACKED tsZbDeviceInfo;
+} tsZbDeviceInfo;
 
 typedef struct{
 	tsZbDeviceInfo *zb_device_ib;
