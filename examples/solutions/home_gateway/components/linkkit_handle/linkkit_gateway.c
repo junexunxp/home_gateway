@@ -602,6 +602,11 @@ static int user_property_set_event_handler(const int devid, const char *request,
         zb_device_rxedcmd_process(ZB_DEVICE_ID_IVALID,"zbPermitJoin",ls->valueint);
 
     }
+    ls = cJSON_GetObjectItem(root,"zbFnReset");
+    if((ls  != NULL) && (cJSON_IsNumber(ls))){
+        zb_device_rxedcmd_process(ZB_DEVICE_ID_IVALID,"startZbNet",2);
+
+    }
 
 	cJSON_Delete(root);
 
